@@ -54,9 +54,6 @@ fetch() { # url sha256 dest_dir
 fetch "$OCCT_URL" "$OCCT_SHA256" "$THIRD_PARTY/occt"
 fetch "$RAPIDJSON_URL" "$RAPIDJSON_SHA256" "$THIRD_PARTY/rapidjson"
 
-mkdir -p "$BUILD_DIR/occt"
-cd "$BUILD_DIR/occt"
-
 # -fwasm-exceptions must be on EVERY object file: OCCT throws Standard_Failure
 # pervasively and mixing wasm-EH modes across objects is undefined behavior.
 # -sWASM_LEGACY_EXCEPTIONS=0 makes LLVM emit the standardized exnref encoding
@@ -72,7 +69,10 @@ cd "$BUILD_DIR/occt"
 # traps and become Go errors.
 EH_FLAGS="-fwasm-exceptions -sWASM_LEGACY_EXCEPTIONS=0 -UOCC_CONVERT_SIGNALS"
 
-emcmake cmake ../../third_party/occt -G Ninja \
+configure() {
+  mkdir -p "$BUILD_DIR/occt"
+  cd "$BUILD_DIR/occt"
+  emcmake cmake ../../third_party/occt -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_LIBRARY_TYPE=Static \
   -DCMAKE_INSTALL_PREFIX="$BUILD_DIR/occt-install" \
@@ -101,6 +101,16 @@ emcmake cmake ../../third_party/occt -G Ninja \
   -D3RDPARTY_RAPIDJSON_INCLUDE_DIR="$THIRD_PARTY/rapidjson/include" \
   -DCMAKE_CXX_FLAGS="$EH_FLAGS" \
   -DCMAKE_C_FLAGS="$EH_FLAGS"
+}
+
+# A restored build cache can hold a CMakeCache.txt pointing at a compiler
+# path that no longer exists; recover by clearing the build dir and
+# reconfiguring from scratch.
+if ! configure; then
+  echo "configure failed; clearing stale build dir and retrying" >&2
+  rm -rf "$BUILD_DIR/occt"
+  configure
+fi
 
 ninja -j"$NPROC"
 ninja install
