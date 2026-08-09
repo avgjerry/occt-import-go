@@ -23,6 +23,18 @@ emcmake cmake -S . -B build/shim -G Ninja \
   -DCMAKE_FIND_ROOT_PATH="$OCCT_INSTALL"
 ninja -C build/shim
 
+# Locate wasm-opt: not all emsdk setups put binaryen's bin dir on PATH
+# (GitHub's setup-emsdk exposes upstream/emscripten only); fall back to the
+# binaryen directory next to emcc.
+WASM_OPT="$(command -v wasm-opt || true)"
+if [ -z "$WASM_OPT" ]; then
+  WASM_OPT="$(dirname "$(command -v emcc)")/../bin/wasm-opt"
+fi
+if ! "$WASM_OPT" --version >/dev/null 2>&1; then
+  echo "wasm-opt not found (binaryen >= 131 required)" >&2
+  exit 1
+fi
+
 # Optimize with binaryen (>= 131; emsdk 6.0.6 bundles it). The link ran at
 # -O0 to keep emcc from invoking wasm-opt on its own (see CMakeLists.txt), so
 # this pass does the real link-time optimization: ~18.7MB -> ~14.1MB.
@@ -30,7 +42,7 @@ ninja -C build/shim
 # Features are enumerated instead of --all-features on purpose: binaryen's
 # richer type output (typed function references) crashes wazero's validator,
 # so the output must stay MVP + exceptions + the listed post-MVP features.
-wasm-opt \
+"$WASM_OPT" \
   --enable-exception-handling --enable-reference-types \
   --enable-bulk-memory --enable-bulk-memory-opt \
   --enable-nontrapping-float-to-int --enable-sign-ext \
