@@ -41,5 +41,8 @@ Prerequisites: [emsdk](https://github.com/emscripten-core/emsdk) (tested with
   few `__syscall_*` imports Emscripten's standalone mode leaves in `env` are
   stubbed on the Go side (internal/wasm/runtime.go) and never do real work.
 - **Reproducibility.** Sources are fetched at pinned versions with SHA-256
-  verification (`build_occt.sh`). CI rebuilds the artifact and compares it
-  against the committed one (`.github/workflows/build-wasm.yml`).
+  verification (`build_occt.sh`). **CI is the source of truth for the
+  committed artifact**: `.github/workflows/build-wasm.yml` rebuilds it on a
+  pinned toolchain and fails on any byte difference. Local builds on other
+  hosts (e.g. macOS) produce working but not byte-identical modules — after
+  changing `wasm/**`, run the workflow and commit its uploaded artifact.
