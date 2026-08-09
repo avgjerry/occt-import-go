@@ -106,6 +106,25 @@ func TestStepToGLBAssemblyStructure(t *testing.T) {
 		len(doc.Nodes), named, len(doc.Meshes), len(doc.Materials))
 }
 
+func TestIgesToGLB(t *testing.T) {
+	glb, err := sharedConverter(t).IgesToGLB(context.Background(), fixture(t, "bearing.iges"))
+	if err != nil {
+		t.Fatalf("IgesToGLB: %v", err)
+	}
+	doc := decodeGLB(t, glb)
+	if len(doc.Meshes) == 0 {
+		t.Fatal("GLB has no meshes")
+	}
+	t.Logf("bearing.iges -> %d bytes GLB, %d meshes, %d nodes",
+		len(glb), len(doc.Meshes), len(doc.Nodes))
+}
+
+func TestIgesRejectsStep(t *testing.T) {
+	if _, err := sharedConverter(t).IgesToGLB(context.Background(), fixture(t, "screw.step")); !errors.Is(err, occt.ErrParse) {
+		t.Errorf("STEP data through IGES reader: got %v, want ErrParse", err)
+	}
+}
+
 func TestMeshQualityOptions(t *testing.T) {
 	ctx := context.Background()
 	step := fixture(t, "screw.step")
@@ -132,8 +151,8 @@ func TestErrorPaths(t *testing.T) {
 	if _, err := conv.StepToGLB(ctx, nil); !errors.Is(err, occt.ErrInvalidInput) {
 		t.Errorf("nil input: got %v, want ErrInvalidInput", err)
 	}
-	if _, err := conv.StepToGLB(ctx, []byte("this is not a STEP file")); !errors.Is(err, occt.ErrStepParse) {
-		t.Errorf("garbage input: got %v, want ErrStepParse", err)
+	if _, err := conv.StepToGLB(ctx, []byte("this is not a STEP file")); !errors.Is(err, occt.ErrParse) {
+		t.Errorf("garbage input: got %v, want ErrParse", err)
 	}
 	truncated := fixture(t, "screw.step")[:2000]
 	if _, err := conv.StepToGLB(ctx, truncated); err == nil {

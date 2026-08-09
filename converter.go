@@ -53,11 +53,21 @@ func NewConverter(ctx context.Context, opts ...ConverterOption) (*Converter, err
 
 // StepToGLB converts one STEP file to GLB.
 func (c *Converter) StepToGLB(ctx context.Context, step []byte, opts ...Option) ([]byte, error) {
+	return c.toGLB(ctx, wasm.FormatSTEP, step, opts)
+}
+
+// IgesToGLB converts one IGES file to GLB.
+func (c *Converter) IgesToGLB(ctx context.Context, iges []byte, opts ...Option) ([]byte, error) {
+	return c.toGLB(ctx, wasm.FormatIGES, iges, opts)
+}
+
+func (c *Converter) toGLB(ctx context.Context, format wasm.Format, input []byte, opts []Option) ([]byte, error) {
 	o := c.defaults
 	for _, opt := range opts {
 		opt(&o)
 	}
-	glb, err := c.runtime.StepToGLB(ctx, step, wasm.Params{
+	glb, err := c.runtime.ToGLB(ctx, input, wasm.Params{
+		Format:             format,
 		LinearDeflection:   o.linearDeflection,
 		AngularDeflection:  o.angularDeflection,
 		RelativeDeflection: o.relativeDeflection,

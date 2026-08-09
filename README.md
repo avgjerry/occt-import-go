@@ -1,6 +1,6 @@
 # occt-import-go
 
-Convert **STEP** CAD files to **GLB** (binary glTF) in pure Go.
+Convert **STEP** and **IGES** CAD files to **GLB** (binary glTF) in pure Go.
 
 This package embeds [Open CASCADE Technology (OCCT)](https://dev.opencascade.org/)
 — the same CAD kernel behind [occt-import-js](https://github.com/kovacsv/occt-import-js) —
@@ -30,6 +30,9 @@ glb, err = conv.StepToGLB(ctx, stepBytes,
     occt.WithLinearDeflection(0.001),  // mesh quality: chordal deflection
     occt.WithAngularDeflection(0.5),   // mesh quality: radians
 )
+
+// IGES works the same way:
+glb, err = conv.IgesToGLB(ctx, igesBytes)
 ```
 
 Mesh quality defaults to a bounding-box-relative linear deflection of `0.001`
@@ -38,7 +41,7 @@ so results are scale-independent. Use `WithRelativeDeflection(false)` to
 switch the linear deflection to absolute model units (millimeters for most
 STEP files).
 
-Errors are matchable with `errors.Is`: `ErrInvalidInput`, `ErrStepParse`,
+Errors are matchable with `errors.Is`: `ErrInvalidInput`, `ErrParse`,
 `ErrEmptyModel`, `ErrConversion`. Conversions honor context cancellation and
 deadlines.
 
@@ -78,7 +81,7 @@ against the committed one.
 
 ## Scope & roadmap
 
-v1 converts STEP → GLB. Candidates for later: IGES input, Draco compression,
+Converts STEP and IGES to GLB. Candidates for later: Draco compression,
 a mesh-data API (geometry access without GLB), OCCT 8.x.
 
 ## License

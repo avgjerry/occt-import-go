@@ -15,9 +15,9 @@ extern "C" {
 
 enum {
   OIG_OK = 0,
-  OIG_ERR_BADARG = -1,      // invalid arguments (null input, zero length)
-  OIG_ERR_STEP_PARSE = -2,  // STEP file could not be parsed
-  OIG_ERR_TRANSFER = -3,    // STEP → XCAF document transfer failed
+  OIG_ERR_BADARG = -1,      // invalid arguments (null input, bad format...)
+  OIG_ERR_PARSE = -2,       // input file could not be parsed
+  OIG_ERR_TRANSFER = -3,    // parsed model → XCAF document transfer failed
   OIG_ERR_EMPTY_DOC = -4,   // no shapes in the document
   OIG_ERR_MESH = -5,        // meshing produced no triangulation
   OIG_ERR_GLTF_WRITE = -6,  // glTF writer failed
@@ -25,12 +25,19 @@ enum {
   OIG_ERR_OOM = -8,         // allocation failure
 };
 
+// Input formats.
+enum {
+  OIG_FORMAT_STEP = 0,
+  OIG_FORMAT_IGES = 1,
+};
+
 // Returns a static version string, e.g. "occt-import-go (OCCT 7.9.1)".
 const char* oig_version(void);
 
-// Converts a STEP file (in memory) to binary glTF (GLB, in memory).
+// Converts a CAD file (in memory) to binary glTF (GLB, in memory).
 //
-//   step_data / step_len   input STEP file bytes
+//   format                 OIG_FORMAT_STEP or OIG_FORMAT_IGES
+//   in_data / in_len       input file bytes
 //   linear_deflection      chordal deflection for meshing (model units, or a
 //                          bounding-box fraction when relative_deflection!=0)
 //   angular_deflection     angular deflection in radians
@@ -39,10 +46,10 @@ const char* oig_version(void);
 //                          the caller (free with oig_free) and *out_len its size
 //
 // Returns OIG_OK or a negative OIG_ERR_* code.
-int32_t oig_step_to_glb(const uint8_t* step_data, uint32_t step_len,
-                        double linear_deflection, double angular_deflection,
-                        int32_t relative_deflection, uint8_t** out_glb,
-                        uint32_t* out_len);
+int32_t oig_to_glb(int32_t format, const uint8_t* in_data, uint32_t in_len,
+                   double linear_deflection, double angular_deflection,
+                   int32_t relative_deflection, uint8_t** out_glb,
+                   uint32_t* out_len);
 
 // Message for the most recent failure on this instance. Static buffer,
 // valid until the next oig_* call. Empty string if no failure occurred.

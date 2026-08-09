@@ -26,11 +26,26 @@ var (
 // StepToGLB converts a STEP file to GLB using a lazily-initialized
 // package-level Converter (wasm compiled on first call).
 func StepToGLB(ctx context.Context, step []byte, opts ...Option) ([]byte, error) {
+	conv, err := sharedConverter(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return conv.StepToGLB(ctx, step, opts...)
+}
+
+// IgesToGLB converts an IGES file to GLB using a lazily-initialized
+// package-level Converter (wasm compiled on first call).
+func IgesToGLB(ctx context.Context, iges []byte, opts ...Option) ([]byte, error) {
+	conv, err := sharedConverter(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return conv.IgesToGLB(ctx, iges, opts...)
+}
+
+func sharedConverter(ctx context.Context) (*Converter, error) {
 	defaultOnce.Do(func() {
 		defaultConverter, defaultErr = NewConverter(ctx)
 	})
-	if defaultErr != nil {
-		return nil, defaultErr
-	}
-	return defaultConverter.StepToGLB(ctx, step, opts...)
+	return defaultConverter, defaultErr
 }

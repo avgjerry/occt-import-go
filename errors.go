@@ -12,10 +12,10 @@ import (
 var (
 	// ErrInvalidInput reports empty or malformed arguments.
 	ErrInvalidInput = errors.New("occt: invalid input")
-	// ErrStepParse reports a STEP file that could not be parsed.
-	ErrStepParse = errors.New("occt: STEP parse failed")
-	// ErrEmptyModel reports a STEP file with no convertible shapes.
-	ErrEmptyModel = errors.New("occt: no shapes in STEP file")
+	// ErrParse reports an input file that could not be parsed.
+	ErrParse = errors.New("occt: file parse failed")
+	// ErrEmptyModel reports an input file with no convertible shapes.
+	ErrEmptyModel = errors.New("occt: no shapes in file")
 	// ErrConversion reports a failure while meshing or writing glTF.
 	ErrConversion = errors.New("occt: conversion failed")
 )
@@ -29,8 +29,8 @@ func mapError(err error) error {
 	switch shimErr.Code {
 	case wasm.CodeBadArg:
 		sentinel = ErrInvalidInput
-	case wasm.CodeStepParse, wasm.CodeTransfer:
-		sentinel = ErrStepParse
+	case wasm.CodeParse, wasm.CodeTransfer:
+		sentinel = ErrParse
 	case wasm.CodeEmptyDoc:
 		sentinel = ErrEmptyModel
 	default:

@@ -16,8 +16,8 @@ set_target_properties(occt_import_go PROPERTIES OUTPUT_NAME "occt" SUFFIX ".wasm
 
 target_include_directories(occt_import_go PRIVATE ${OpenCASCADE_INCLUDE_DIR})
 
-# Linking these four pulls the full transitive OCCT closure via exported targets.
-target_link_libraries(occt_import_go PRIVATE TKDEGLTF TKDESTEP TKMesh TKXCAF)
+# Linking these pulls the full transitive OCCT closure via exported targets.
+target_link_libraries(occt_import_go PRIVATE TKDEGLTF TKDESTEP TKDEIGES TKMesh TKXCAF)
 
 # -fwasm-exceptions + WASM_LEGACY_EXCEPTIONS=0 everywhere (compile AND link,
 # here and in build_occt.sh): OCCT throws Standard_Failure pervasively,
@@ -48,5 +48,5 @@ target_link_options(occt_import_go PRIVATE
   "SHELL:-s ALLOW_MEMORY_GROWTH=1"
   "SHELL:-s INITIAL_MEMORY=64MB"
   "SHELL:-s STACK_SIZE=10MB"
-  "SHELL:-s EXPORTED_FUNCTIONS=_oig_version,_oig_step_to_glb,_oig_last_error,_oig_free,_malloc,_free"
+  "SHELL:-s EXPORTED_FUNCTIONS=_oig_version,_oig_to_glb,_oig_last_error,_oig_free,_malloc,_free"
 )
