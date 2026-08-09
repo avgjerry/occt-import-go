@@ -28,12 +28,14 @@ if ! command -v emcmake >/dev/null 2>&1; then
 fi
 
 fetch() { # url sha256 dest_dir
-  local url="$1" sha="$2" dest="$3" tarball
+  local url="$1" sha="$2" dest="$3" tmpdir tarball
   if [ -d "$dest" ]; then
     echo "already fetched: $dest"
     return
   fi
-  tarball="$(mktemp -t occt-fetch).tar.gz"
+  # mktemp -d with an explicit template is portable (BSD/macOS and GNU).
+  tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/occt-fetch.XXXXXX")"
+  tarball="$tmpdir/archive.tar.gz"
   echo "fetching $url"
   curl -fsSL "$url" -o "$tarball"
   local got
@@ -46,7 +48,7 @@ fetch() { # url sha256 dest_dir
   fi
   mkdir -p "$dest"
   tar -xzf "$tarball" -C "$dest" --strip-components=1
-  rm -f "$tarball"
+  rm -rf "$tmpdir"
 }
 
 fetch "$OCCT_URL" "$OCCT_SHA256" "$THIRD_PARTY/occt"
