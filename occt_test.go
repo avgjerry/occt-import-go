@@ -107,7 +107,10 @@ func TestStepToGLBAssemblyStructure(t *testing.T) {
 }
 
 func TestIgesToGLB(t *testing.T) {
-	glb, err := sharedConverter(t).IgesToGLB(context.Background(), fixture(t, "bearing.iges"))
+	// Coarse deflection: bearing.iges is a heavy model and this test asserts
+	// structure, not mesh quality; default quality takes minutes on slow CI.
+	glb, err := sharedConverter(t).IgesToGLB(context.Background(), fixture(t, "bearing.iges"),
+		occt.WithLinearDeflection(0.01))
 	if err != nil {
 		t.Fatalf("IgesToGLB: %v", err)
 	}

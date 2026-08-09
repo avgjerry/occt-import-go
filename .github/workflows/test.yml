@@ -19,7 +19,7 @@ jobs:
         with:
           go-version: "1.26"
       - run: go vet ./...
-      - run: go test -short ./...
+      - run: go test -short -timeout 30m ./...
 
   test-alpine:
     name: go test (alpine / musl)
@@ -27,7 +27,7 @@ jobs:
     container: golang:1.26-alpine
     steps:
       - uses: actions/checkout@v4
-      - run: go test -short ./...
+      - run: go test -short -timeout 30m ./...
 
   test-interpreter:
     name: go test (interpreter engine)
