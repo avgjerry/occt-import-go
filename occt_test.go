@@ -20,25 +20,54 @@ var (
 	converterErr  error
 )
 
-// sharedConverter compiles the wasm module once for the whole test binary.
-func sharedConverter(t *testing.T) *occt.Converter {
-	t.Helper()
+// newFuzzConverter returns the package-shared Converter (compiled once for
+// the whole test binary); usable from both tests and fuzz targets.
+func newFuzzConverter() (*occt.Converter, error) {
 	converterOnce.Do(func() {
 		converter, converterErr = occt.NewConverter(context.Background())
 	})
-	if converterErr != nil {
-		t.Fatalf("NewConverter: %v", converterErr)
+	return converter, converterErr
+}
+
+// sharedConverter compiles the wasm module once for the whole test binary.
+func sharedConverter(t *testing.T) *occt.Converter {
+	t.Helper()
+	conv, err := newFuzzConverter()
+	if err != nil {
+		t.Fatalf("NewConverter: %v", err)
 	}
-	return converter
+	return conv
+}
+
+func fixtureBytes(name string) ([]byte, error) {
+	return os.ReadFile(filepath.Join("testdata", name))
 }
 
 func fixture(t *testing.T, name string) []byte {
 	t.Helper()
-	data, err := os.ReadFile(filepath.Join("testdata", name))
+	data, err := fixtureBytes(name)
 	if err != nil {
 		t.Fatalf("read fixture: %v", err)
 	}
 	return data
+}
+
+var convertCache sync.Map // fixture name -> []byte (GLB at default options)
+
+// convertDefault converts a fixture at default options, caching the result:
+// several tests examine the same conversion, and each one is expensive.
+// Safe because conversions are deterministic (see TestDeterministicOutput).
+func convertDefault(t *testing.T, name string) []byte {
+	t.Helper()
+	if glb, ok := convertCache.Load(name); ok {
+		return glb.([]byte)
+	}
+	glb, err := sharedConverter(t).StepToGLB(context.Background(), fixture(t, name))
+	if err != nil {
+		t.Fatalf("StepToGLB(%s): %v", name, err)
+	}
+	convertCache.Store(name, glb)
+	return glb
 }
 
 func decodeGLB(t *testing.T, glb []byte) *gltf.Document {
@@ -54,10 +83,7 @@ func decodeGLB(t *testing.T, glb []byte) *gltf.Document {
 }
 
 func TestStepToGLBScrew(t *testing.T) {
-	glb, err := sharedConverter(t).StepToGLB(context.Background(), fixture(t, "screw.step"))
-	if err != nil {
-		t.Fatalf("StepToGLB: %v", err)
-	}
+	glb := convertDefault(t, "screw.step")
 	doc := decodeGLB(t, glb)
 
 	if len(doc.Meshes) == 0 {
@@ -79,10 +105,7 @@ func TestStepToGLBScrew(t *testing.T) {
 }
 
 func TestStepToGLBAssemblyStructure(t *testing.T) {
-	glb, err := sharedConverter(t).StepToGLB(context.Background(), fixture(t, "as1-oc-214.stp"))
-	if err != nil {
-		t.Fatalf("StepToGLB: %v", err)
-	}
+	glb := convertDefault(t, "as1-oc-214.stp")
 	doc := decodeGLB(t, glb)
 
 	// AS1 is a multi-part assembly with colors: expect hierarchy, names and
