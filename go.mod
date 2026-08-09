@@ -1,4 +1,4 @@
-module github.com/jerrylee1697/occt-import-go
+module github.com/avgjerry/occt-import-go
 
 go 1.25.0
 

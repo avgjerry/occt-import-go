@@ -17,7 +17,7 @@ compiled to WebAssembly, and runs it in-process under
 ## Usage
 
 ```go
-import occt "github.com/jerrylee1697/occt-import-go"
+import occt "github.com/avgjerry/occt-import-go"
 
 // One-shot:
 glb, err := occt.StepToGLB(ctx, stepBytes)

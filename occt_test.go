@@ -11,7 +11,7 @@ import (
 
 	"github.com/qmuntal/gltf"
 
-	occt "github.com/jerrylee1697/occt-import-go"
+	occt "github.com/avgjerry/occt-import-go"
 )
 
 var (

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/jerrylee1697/occt-import-go/internal/wasm"
+	"github.com/avgjerry/occt-import-go/internal/wasm"
 )
 
 // Sentinel errors, matchable with errors.Is. The returned error also carries

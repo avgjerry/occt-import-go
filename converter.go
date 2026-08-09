@@ -3,7 +3,7 @@ package occt
 import (
 	"context"
 
-	"github.com/jerrylee1697/occt-import-go/internal/wasm"
+	"github.com/avgjerry/occt-import-go/internal/wasm"
 )
 
 // Converter holds the compiled OCCT wasm module. It is safe for concurrent
