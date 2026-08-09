@@ -1,0 +1,9 @@
+# Build outputs
+/wasm/build/
+/wasm/third_party/
+/spike/*.wasm
+*.o
+*.a
+
+# OS noise
+.DS_Store

@@ -1,0 +1,40 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: go test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-14]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - run: go vet ./...
+      - run: go test -short ./...
+
+  test-alpine:
+    name: go test (alpine / musl)
+    runs-on: ubuntu-latest
+    container: golang:1.26-alpine
+    steps:
+      - uses: actions/checkout@v4
+      - run: go test -short ./...
+
+  test-interpreter:
+    name: go test (interpreter engine)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - run: go test -run TestInterpreterEngine -timeout 30m ./...

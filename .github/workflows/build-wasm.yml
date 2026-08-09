@@ -1,0 +1,51 @@
+name: build-wasm
+
+# Rebuilds the embedded OCCT wasm artifact reproducibly and verifies it
+# matches the committed internal/wasm/occt.wasm.zst (or uploads the new
+# artifact for a PR that intentionally updates it).
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ["wasm/**", ".github/workflows/build-wasm.yml"]
+
+env:
+  EMSDK_VERSION: "6.0.6"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: ${{ env.EMSDK_VERSION }}
+          actions-cache-folder: emsdk-cache
+
+      - name: Cache OCCT build
+        uses: actions/cache@v4
+        with:
+          path: |
+            wasm/third_party
+            wasm/build/occt
+            wasm/build/occt-install
+          key: occt-wasm-${{ env.EMSDK_VERSION }}-${{ hashFiles('wasm/build_occt.sh') }}
+
+      - name: Build OCCT
+        run: ./wasm/build_occt.sh
+
+      - name: Build shim
+        run: ./wasm/build_shim.sh
+
+      - name: Compare against committed artifact
+        run: |
+          git diff --stat -- internal/wasm/occt.wasm.zst || true
+          sha256sum internal/wasm/occt.wasm.zst
+          if ! git diff --quiet -- internal/wasm/occt.wasm.zst; then
+            echo "::warning::rebuilt occt.wasm.zst differs from the committed artifact"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: occt-wasm
+          path: internal/wasm/occt.wasm.zst
